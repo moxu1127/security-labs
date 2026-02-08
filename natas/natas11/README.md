@@ -4,12 +4,17 @@
 This level stores user state inside a cookie named data.
 
 The cookie is:
+'''
 base64_encode(xor_encrypt(json_data))
+'''
 The server checks whether:
+'''
 "showpassword":"yes"
+'''
 If so,it reveals the password for the next level.
 
 ## Relevant Source Code
+'''
 $defaultdata = array( "showpassword"=>"no", "bgcolor"=>"#ffffff");
 
 function xor_encrypt($in) {
@@ -39,7 +44,7 @@ function loadData($def) {
     }
     return $mydata;
 }
-
+'''
 ## Vulnerability Analysis
 The application trusts client-side encrypted data.
 Key issues:
@@ -52,25 +57,30 @@ As a result, any user who knows the key can forge arbitrary data.
 ## Exploitation Strategy
 Step 1: Obtain Original Cookie
 Example cookie:
+'''
 HmYkBwozJw4WNyAAFyB1VUcqOE1JZjUIBis7ABdmbU1GIjEJAyIxTRg%3D
-
+'''
 URL-decode first,then base64-decode.
 
 Step 2: Recover XOR Key
 We know the plaintext structure
+'''
 {"showpassword":"no","bgcolor":"#ffffff"}
-
+'''
 Using XOR properties:
 ciphertext ^ plaintext = key
 
 The recovered key is:
+'''
 eDWo
-
+'''
 Step 3: Forge a New Cookie
 Target payload:
+'''
 {"showpassword":"yes","bgcolor":"#ffffff"}
-
+'''
 Python code used:
+'''
 import base64
 def xor(data,key):
    out = b''
@@ -83,11 +93,12 @@ key = b'eDWo'
 
 new_cookie = base64.b64encode(xor(new_plain,key))
 print(new_cookie.decode())
-
+'''
 Sept 4: Replace Cookie
 Set the browser cookie:
+'''
 data=<new_cookie_value>
-
+'''
 Refresh the page -> password for natas12 is revealed!
 
 ## Root Cause
